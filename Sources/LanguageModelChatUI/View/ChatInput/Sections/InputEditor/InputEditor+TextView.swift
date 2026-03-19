@@ -96,8 +96,7 @@ extension InputEditor: UITextViewDelegate {
     public func textView(_ textView: UITextView, editMenuForTextIn _: NSRange, suggestedActions: [UIMenuElement]) -> UIMenu? {
         let pasteboard = UIPasteboard.general
         let canPasteAttachment = pasteboard.hasStrings
-
-        let actions: [UIAction] = [
+        var actions: [UIAction] = [
             UIAction(title: String.localized("Insert New Line")) { _ in
                 textView.insertText("\n")
             },
@@ -107,10 +106,12 @@ extension InputEditor: UITextViewDelegate {
             ) { [weak self] _ in
                 self?.delegate?.onInputEditorPasteAsAttachmentTapped()
             },
-            UIAction(title: String.localized("More")) { [weak self] _ in
-                self?.delegate?.onInputEditorToggleMoreButtonTapped()
-            },
         ]
+        if configuration.showsMoreButton {
+            actions.append(UIAction(title: String.localized("More")) { [weak self] _ in
+                self?.delegate?.onInputEditorToggleMoreButtonTapped()
+            })
+        }
         return UIMenu(children: suggestedActions + actions)
     }
 

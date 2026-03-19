@@ -42,7 +42,12 @@ class InputEditor: EditorSectionView {
     }
 
     /// Configuration injected from ChatInputView.
-    var configuration: ChatInputConfiguration = .default
+    var configuration: ChatInputConfiguration = .default {
+        didSet {
+            switchToRequiredStatus()
+            setNeedsLayout()
+        }
+    }
 
     weak var delegate: Delegate?
 

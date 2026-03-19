@@ -13,6 +13,7 @@ import UniformTypeIdentifiers
 
 extension ChatInputView: InputEditor.Delegate {
     func onInputEditorCaptureButtonTapped() {
+        guard configuration.showsCameraButton else { return }
         openCamera()
     }
 
@@ -21,10 +22,12 @@ extension ChatInputView: InputEditor.Delegate {
     }
 
     func onInputEditorMicButtonTapped() {
+        guard configuration.showsVoiceButton else { return }
         presentSpeechRecognition()
     }
 
     func onInputEditorToggleMoreButtonTapped() {
+        guard configuration.showsMoreButton else { return }
         endEditing(true)
         controlPanel.toggle()
     }

@@ -57,5 +57,9 @@ let package = Package(
             name: "ChatClientKitTests",
             dependencies: ["ChatClientKit"]
         ),
+        .testTarget(
+            name: "LanguageModelChatUITests",
+            dependencies: ["LanguageModelChatUI"]
+        ),
     ]
 )

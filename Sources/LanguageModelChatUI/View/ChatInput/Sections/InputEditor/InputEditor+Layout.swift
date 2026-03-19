@@ -6,6 +6,27 @@
 import UIKit
 
 extension InputEditor {
+    private var showsCameraButton: Bool { configuration.showsCameraButton }
+    private var showsVoiceButton: Bool { configuration.showsVoiceButton }
+    private var showsMoreButton: Bool { configuration.showsMoreButton }
+
+    func setButton(
+        _ button: UIView,
+        frame: CGRect,
+        isVisible: Bool,
+        hiddenTransform: CGAffineTransform? = nil
+    ) {
+        button.frame = frame
+        button.isHidden = !isVisible
+        button.isUserInteractionEnabled = isVisible
+        button.alpha = isVisible ? 1 : 0
+        if let hiddenTransform, !isVisible {
+            button.transform = hiddenTransform
+        } else {
+            button.transform = .identity
+        }
+    }
+
     func textLayoutHeight(_ input: CGFloat) -> CGFloat {
         var finalHeight = input
         finalHeight = max(font.lineHeight, finalHeight)
@@ -42,133 +63,176 @@ extension InputEditor {
     }
 
     func layoutAsEditingText() {
-        sendButton.frame = CGRect(
+        setButton(
+            sendButton,
+            frame: CGRect(
             x: bounds.width - inset.right - iconSize.width,
             y: bounds.height - iconSize.height - inset.bottom,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: true
         )
-        sendButton.alpha = 1
-        moreButton.frame = CGRect(
+        setButton(
+            moreButton,
+            frame: CGRect(
             x: bounds.width - inset.right - iconSize.width,
             y: bounds.height - iconSize.height - inset.bottom,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: false,
+            hiddenTransform: CGAffineTransform(scaleX: 0.5, y: 0.5)
         )
-        defer { moreButton.transform = CGAffineTransform(scaleX: 0.5, y: 0.5) }
-        moreButton.alpha = 0
-        voiceButton.frame = CGRect(
+
+        let voiceFrame = CGRect(
             x: sendButton.frame.minX - iconSize.width - iconSpacing,
             y: sendButton.frame.minY,
             width: iconSize.width,
             height: iconSize.height
         )
-        voiceButton.alpha = 1
+        setButton(voiceButton, frame: voiceFrame, isVisible: showsVoiceButton)
 
         let textLayoutHeight = textLayoutHeight(textHeight.value)
+        let textMaxX = showsVoiceButton
+            ? voiceButton.frame.minX - iconSpacing
+            : sendButton.frame.minX - iconSpacing
         textView.frame = CGRect(
             x: inset.left,
             y: (bounds.height - textLayoutHeight) / 2,
-            width: voiceButton.frame.minX - inset.left - iconSpacing,
+            width: textMaxX - inset.left,
             height: textLayoutHeight
         )
         placeholderLabel.frame = textView.frame
 
-        bossButton.frame = CGRect(
+        setButton(
+            bossButton,
+            frame: CGRect(
             x: 0 - inset.left - iconSize.width,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: false
         )
-        bossButton.alpha = 0
     }
 
     func layoutAsPreEditingText() {
-        defer { bossButton.transform = CGAffineTransform(scaleX: 0.5, y: 0.5) }
-        defer { sendButton.transform = CGAffineTransform(scaleX: 0.5, y: 0.5) }
-
-        bossButton.frame = CGRect(
+        setButton(
+            bossButton,
+            frame: CGRect(
             x: 0 - inset.left - iconSize.width,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: false,
+            hiddenTransform: CGAffineTransform(scaleX: 0.5, y: 0.5)
         )
-        bossButton.alpha = 0
 
-        moreButton.frame = CGRect(
+        let moreFrame = CGRect(
             x: bounds.width - inset.right - iconSize.width,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
         )
-        moreButton.alpha = 1
-        voiceButton.frame = CGRect(
-            x: moreButton.frame.minX - iconSize.width - iconSpacing,
+        setButton(moreButton, frame: moreFrame, isVisible: showsMoreButton)
+
+        let voiceX = (showsMoreButton ? moreButton.frame.minX : bounds.width - inset.right) - iconSize.width - iconSpacing
+        let voiceFrame = CGRect(
+            x: voiceX,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
         )
-        voiceButton.alpha = 1
+        setButton(voiceButton, frame: voiceFrame, isVisible: showsVoiceButton)
+
         let textLayoutHeight = textLayoutHeight(textHeight.value)
+        let textMaxX: CGFloat
+        if showsVoiceButton {
+            textMaxX = voiceButton.frame.minX - iconSpacing
+        } else if showsMoreButton {
+            textMaxX = moreButton.frame.minX - iconSpacing
+        } else {
+            textMaxX = bounds.width - inset.right
+        }
         textView.frame = CGRect(
             x: inset.left,
             y: (bounds.height - textLayoutHeight) / 2,
-            width: voiceButton.frame.minX - inset.left - iconSpacing,
+            width: textMaxX - inset.left,
             height: textLayoutHeight
         )
         textView.alpha = 1
         placeholderLabel.frame = textView.frame
 
-        sendButton.frame = CGRect(
+        setButton(
+            sendButton,
+            frame: CGRect(
             x: bounds.width + iconSpacing + inset.right,
             y: bounds.height - iconSize.height - inset.bottom,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: false,
+            hiddenTransform: CGAffineTransform(scaleX: 0.5, y: 0.5)
         )
-        sendButton.alpha = 0
     }
 
     func layoutAsStandard() {
-        defer { sendButton.transform = CGAffineTransform(scaleX: 0.5, y: 0.5) }
-
-        bossButton.frame = CGRect(
+        let cameraFrame = CGRect(
             x: inset.left,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
         )
-        bossButton.alpha = 1
-        moreButton.frame = CGRect(
+        setButton(bossButton, frame: cameraFrame, isVisible: showsCameraButton)
+
+        let moreFrame = CGRect(
             x: bounds.width - inset.right - iconSize.width,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
         )
-        moreButton.alpha = 1
-        moreButton.transform = .identity
-        voiceButton.frame = CGRect(
-            x: moreButton.frame.minX - iconSize.width - iconSpacing,
+        setButton(moreButton, frame: moreFrame, isVisible: showsMoreButton)
+
+        let voiceX = (showsMoreButton ? moreButton.frame.minX : bounds.width - inset.right) - iconSize.width - iconSpacing
+        let voiceFrame = CGRect(
+            x: voiceX,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
         )
-        voiceButton.alpha = 1
+        setButton(voiceButton, frame: voiceFrame, isVisible: showsVoiceButton)
+
         let textLayoutHeight = textLayoutHeight(textHeight.value)
+        let textMinX = showsCameraButton ? bossButton.frame.maxX + iconSpacing : inset.left
+        let textMaxX: CGFloat
+        if showsVoiceButton {
+            textMaxX = voiceButton.frame.minX - iconSpacing
+        } else if showsMoreButton {
+            textMaxX = moreButton.frame.minX - iconSpacing
+        } else {
+            textMaxX = bounds.width - inset.right
+        }
         textView.frame = CGRect(
-            x: bossButton.frame.maxX + iconSpacing,
+            x: textMinX,
             y: (bounds.height - textLayoutHeight) / 2,
-            width: voiceButton.frame.minX - bossButton.frame.maxX - iconSpacing * 2,
+            width: textMaxX - textMinX,
             height: textLayoutHeight
         )
         textView.alpha = 1
         placeholderLabel.frame = textView.frame
 
-        sendButton.frame = CGRect(
+        setButton(
+            sendButton,
+            frame: CGRect(
             x: bounds.width + inset.right,
             y: inset.top,
             width: iconSize.width,
             height: iconSize.height
+        ),
+            isVisible: false,
+            hiddenTransform: CGAffineTransform(scaleX: 0.5, y: 0.5)
         )
-        sendButton.alpha = 0
     }
 }
