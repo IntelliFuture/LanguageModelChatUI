@@ -18,6 +18,10 @@ public protocol EventStreamTask: Sendable {
     func events() -> AsyncStream<EventSource.EventType>
 }
 
+public protocol HTTPResponseProvidingEventStreamTask: EventStreamTask {
+    var response: HTTPURLResponse? { get }
+}
+
 public protocol EventSourceProducing: Sendable {
     func makeDataTask(for request: URLRequest) -> EventStreamTask
 }
@@ -30,8 +34,12 @@ public struct DefaultEventSourceFactory: EventSourceProducing {
     }
 }
 
-public struct DefaultEventStreamTask: EventStreamTask, @unchecked Sendable {
+public struct DefaultEventStreamTask: HTTPResponseProvidingEventStreamTask, @unchecked Sendable {
     public let dataTask: EventSource.DataTask
+
+    public var response: HTTPURLResponse? {
+        dataTask.httpResponse
+    }
 
     public func events() -> AsyncStream<EventSource.EventType> {
         dataTask.events()

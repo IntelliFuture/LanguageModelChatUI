@@ -8,6 +8,7 @@ open class OpenAICompatibleClient: BaseChatClient, @unchecked Sendable {
     open var apiKey: String?
     open var defaultHeaders: [String: String]
     open var requestCustomization: [String: Any]
+    open var didReceiveHTTPResponse: (@Sendable (HTTPURLResponse) async -> Void)?
 
     public enum Error: Swift.Error {
         case invalidURL
@@ -76,6 +77,8 @@ open class OpenAICompatibleClient: BaseChatClient, @unchecked Sendable {
 
         return processor.stream(request: request) { [weak self] error in
             await self?.collect(error: error)
+        } didReceiveHTTPResponse: { [weak self] response in
+            await self?.didReceiveHTTPResponse?(response)
         }
     }
 

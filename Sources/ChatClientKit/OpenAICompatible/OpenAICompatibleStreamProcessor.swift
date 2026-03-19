@@ -25,14 +25,15 @@ struct OpenAICompatibleStreamProcessor {
 
     func stream(
         request: URLRequest,
-        collectError: @Sendable @escaping (Swift.Error) async -> Void
+        collectError: @Sendable @escaping (Swift.Error) async -> Void,
+        didReceiveHTTPResponse: (@Sendable (HTTPURLResponse) async -> Void)? = nil
     ) -> AnyAsyncSequence<ChatResponseChunk> {
         let eventSourceFactory = eventSourceFactory
         let chunkDecoder = chunkDecoder
         let errorExtractor = errorExtractor
 
         let stream = AsyncStream<ChatResponseChunk> { continuation in
-            Task.detached(priority: .userInitiated) { [collectError, eventSourceFactory, chunkDecoder, errorExtractor, request] in
+            Task.detached(priority: .userInitiated) { [collectError, didReceiveHTTPResponse, eventSourceFactory, chunkDecoder, errorExtractor, request] in
                 let toolCallCollector = CompletionToolCollector()
                 var chunkCount = 0
                 var totalContentLength = 0
@@ -43,6 +44,12 @@ struct OpenAICompatibleStreamProcessor {
                     switch event {
                     case .open:
                         logger.info("connection was opened.")
+                        if
+                            let responseTask = streamTask as? HTTPResponseProvidingEventStreamTask,
+                            let httpResponse = responseTask.response
+                        {
+                            await didReceiveHTTPResponse?(httpResponse)
+                        }
                     case let .error(error):
                         logger.error("received an error: \(error)")
                         await collectError(error)

@@ -124,6 +124,17 @@ public extension EventSource {
             }
         }
 
+        let _httpResponse: Mutex<HTTPURLResponse?> = Mutex(nil)
+
+        public var httpResponse: HTTPURLResponse? {
+            get {
+                _httpResponse.withLock { $0 }
+            }
+            set {
+                _httpResponse.withLock { $0 = newValue }
+            }
+        }
+
         let _consumed: Mutex<Bool> = Mutex(false)
 
         var consumed: Bool {
@@ -241,6 +252,8 @@ public extension EventSource {
                 completionHandler(.cancel)
                 return
             }
+
+            self.httpResponse = httpResponse
 
             // Stop connection when 204 response code, otherwise keep open
             guard httpResponse.statusCode != 204 else {
